@@ -3,7 +3,7 @@
 Plugin Name: Template_Help Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via ajax
 Author: TemplateHelp.com
-Version: 2.0
+Version: 2.1
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
@@ -55,7 +55,7 @@ function widget_template_help_init() {
 			/*count*/
 			$newoptions['count'] = (int) $_POST['template_help-count'];
 			if(($newoptions['count']<1)||($newoptions['count']>10))
-				$newoptions['count']=1;
+				$newoptions['count']=3;
 			/*fullview*/
 			$newoptions['fullview'] = intval($_POST['template_help-fullview']);
 			/*cat*/
@@ -71,80 +71,78 @@ function widget_template_help_init() {
 			$options = $newoptions;
 			update_option('widget_template_help', $options);
 		}
-	?>
-				<div style="text-align:right">
-				<label for="template_help-title" style="line-height:35px;display:block;">
-				<?php _e('Widget title:', 'widgets'); ?>
-				<input type="text" id="template_help-title" name="template_help-title" value="<?php echo wp_specialchars($options['title'], true); ?>" />
+		echo '		<div style="text-align:right">
+				<label for="template_help-title" style="line-height:35px;display:block;">';
+				_e('Widget title:', 'widgets');
+				echo '<input type="text" id="template_help-title" name="template_help-title" value="'.wp_specialchars($options['title'], true).'" />
 				</label>
 
-				<label for="template_help-aff" style="line-height:35px;display:block;">
-				<?php _e('Affiliate:', 'widgets'); ?>
-				<input type="text" id="template_help-aff" name="template_help-aff" value="<?php echo wp_specialchars($options['aff'], true); ?>" />
+				<label for="template_help-aff" style="line-height:35px;display:block;">';
+				_e('Affiliate:', 'widgets');
+				echo '<input type="text" id="template_help-aff" name="template_help-aff" value="'.wp_specialchars($options['aff'], true).'" />
 				</label>
 
-				<label for="template_help-wap" style="line-height:35px;display:block;">
-				<?php _e('WebAPI Password:', 'widgets'); ?>
-				<input type="text" id="template_help-wap" name="template_help-wap" value="<?php echo wp_specialchars($options['wap'], true); ?>" />
+				<label for="template_help-wap" style="line-height:35px;display:block;">';
+				_e('WebAPI Password:', 'widgets');
+				echo '<input type="text" id="template_help-wap" name="template_help-wap" value="'.wp_specialchars($options['wap'], true).'" />
 				</label>
 
-				<label for="template_help-position" style="line-height:35px;display:block;">
-				<?php _e('Templates position :', 'widgets'); ?>
-				<? $position = wp_specialchars($options['position'], true); ?>
-				<input type="radio"	name="template_help-position" value="0"<?=$position == 0 ? " checked" : ""?>/> Ver
-				<input type="radio"	name="template_help-position" value="1"<?=$position == 1 ? " checked" : ""?>/> Hor
+				<label for="template_help-position" style="line-height:35px;display:block;">';
+				_e('Templates position :', 'widgets');
+				$position = wp_specialchars($options['position'], true);
+				echo '<input type="radio"	name="template_help-position" value="0"'.($position == 0 ? " checked" : "").'/> Ver
+				<input type="radio"	name="template_help-position" value="1"'.($position == 1 ? " checked" : "").'/> Hor
 				</label>
 
-				<label for="template_help-count" style="line-height:35px;display:block;">
-				<?php _e('Number of templates to display: (1-10)', 'widgets'); ?>
-				<input type="text" id="template_help-count" name="template_help-count" value="<?php echo $options['count']; ?>" style="width:18px" />
+				<label for="template_help-count" style="line-height:35px;display:block;">';
+				_e('Number of templates to display: (1-10)', 'widgets');
+				echo '<input type="text" id="template_help-count" name="template_help-count" value="'.$options['count'].'" style="width:18px" />
 				</label>
 
-				<label for="template_help-fullview" style="line-height:35px;display:block;">
-				<?php _e('Display template\'s information :', 'widgets'); ?>
-				<? $fullview = wp_specialchars($options['fullview'], true); ?><br/>
-				<input type="radio"	name="template_help-fullview" value="1"<?=$fullview == 1 ? " checked" : ""?>/> Full Details
-				<input type="radio"	name="template_help-fullview" value="0"<?=$fullview == 0 ? " checked" : ""?>/> Shorten Preview
+				<label for="template_help-fullview" style="line-height:35px;display:block;">';
+				_e('Display template\'s information :', 'widgets');
+				$fullview = wp_specialchars($options['fullview'], true);
+				echo '<br/>
+				<input type="radio"	name="template_help-fullview" value="1"'.($fullview == 1 ? " checked" : "").'/> Full Details
+				<input type="radio"	name="template_help-fullview" value="0"'.($fullview == 0 ? " checked" : "").'/> Shorten Preview
 				</label>
 
-				<label for="template_help-cats" style="line-height:35px;display:block;">
-				<?php _e('Categories:', 'widgets'); ?>
-				</label>
+				<label for="template_help-cats" style="line-height:35px;display:block;">';
+				_e('Categories:', 'widgets');
+				echo '</label>
 				<select style="width:170px;font-size:11px;" id="template_help-cats" name="template_help-cat">
-						<option value="All" <?php echo "All" == $options['cat'] ? "selected=true" : "" ?>>Show all</option>
-          <?php
+						<option value="All" '.("All" == $options['cat'] ? "selected=true" : "" ).'>Show all</option>';
           $cats = get_categories_list();
-					foreach ($cats as $id => $name) {?>
-						<option value="<?php echo $id?>" <?php echo $id == $options['cat'] ? "selected=true" : "" ?>><?php echo $name?></option>
-					<?php }?>
-       	</select>
+					foreach ($cats as $id => $name) {
+						echo '<option value="'.$id.'" '.($id == $options['cat'] ? "selected=true" : "" ).'>'.$name.'</option>';
+					}
+       	echo '</select>
 
-				<label for="template_help-types" style="line-height:35px;display:block;">
-				<?php _e('Types:', 'widgets'); ?>
-				</label>
+				<label for="template_help-types" style="line-height:35px;display:block;">';
+				_e('Types:', 'widgets');
+				echo '</label>
 				<select style="width:170px;font-size:11px;" id="template_help-types" name="template_help-type">
-          <?php
+					<option value="All" '.("All" == $options['type'] ? "selected=true" : "" ).'>Show all</option>';
           $types = get_types_list();
-					foreach ($types as $id => $name) {?>
-						<option value="<?php echo $id?>" <?php echo $id == $options['type'] ? "selected=true" : "" ?>><?php echo $name?></option>
-					<?php }?>
+					foreach ($types as $id => $name) {
+						echo '<option value="'.$id.'" '.($id == $options['type'] ? "selected=true" : "" ).'>'.$name.'</option>';
+					}
+				echo '
        	</select>
 
 				<input type="hidden" name="template_help-submit" id="template_help-submit" value="1" />
-				</div>
-	<?php
+				</div>';
 	}
 
 	// This prints the widget
 	function widget_template_help($args) {
 		extract($args);
 		$options = (array) get_option('widget_template_help');
-		echo $before_widget; ?>
-		<center><?php echo $before_title . $options['title'] . $after_title;?></center>
-		<table align="center" id="templates"><tr>
-		<?
+		echo $before_widget;
+		echo '<center>'.$before_title . $options['title'] . $after_title.'</center>
+		<table align="center" id="templates"><tr>';
 		for ($i=1; $i<=$options['count']; $i++) {
-    	?>
+    	echo '
     	<td align="center" style="padding:3px">
     	<div class="ft_image">
 				<a href="#" target="_blank">
@@ -156,14 +154,16 @@ function widget_template_help_init() {
 					<a target="_blank" class="view" href="#">View Template</a>
 				</div>
 			</div>
-    	</td><?
+    	</td>';
     	if($options['position']==0) {
-    	?></tr><tr><?
+    	echo '</tr><tr>';
     	}
-		} ?>
+		}
+		echo '
 		</tr>
-		</table>
-		<?php echo $after_widget;?>
+		</table>';
+		echo $after_widget;
+		echo '
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		<script>
 			$(function(){
@@ -172,37 +172,37 @@ function widget_template_help_init() {
 				function(data){
 					if (typeof(data.error) != "undefined" && !data.error) {
 						imgs = new Array();
-						$.each($('#templates .ft_image'), function(i, item) {
+						$.each($("#templates .ft_image"), function(i, item) {
 							if (data.templates[i]) {
 								var $obj = $(this);
 								imgs[i] = new Image();
 		  					jQuery(imgs[i]).load(function(){
-		  						$obj.find('a div img').fadeOut();
-		  						$obj.find('a div').animate({width:imgs[i].width, height:imgs[i].height}, 400, function(){
-		  							$(this).find('img').css('padding', '0px').attr('src', data.templates[i].src).fadeIn();
+		  						$obj.find("a div img").fadeOut();
+		  						$obj.find("a div").animate({width:imgs[i].width, height:imgs[i].height}, 400, function(){
+		  							$(this).find("img").css("padding", "0px").attr("src", data.templates[i].src).fadeIn();
 		  						});
-		  					}).attr('src',data.templates[i].src);
-								$(this).find('a').attr('href', data.templates[i].href);
-								if (<?=$options['fullview']?>) {
-									$(this).find('.bottext').prepend("<a href='"+data.templates[i].cart+"' target='_blank'>Price : \$"+data.templates[i].price+"</a> | <a href='"+data.templates[i].href+"' target='_blank'>Details</a><br/>Downloads : "+data.templates[i].downloads);
+		  					}).attr("src",data.templates[i].src);
+								$(this).find("a").attr("href", data.templates[i].href);
+								if ('.$options['fullview'].') {
+									$(this).find(".bottext").prepend("<a href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price : \$"+data.templates[i].price+"</a> | <a href=\'"+data.templates[i].href+"\' target=\'_blank\'>Details</a><br/>Downloads : "+data.templates[i].downloads);
 								}
 							} else {
 								$(this).remove();
 							}
 						});
-						if (<?=$options['fullview']?>) {
-							$('#templates .bottext .view').remove();
+						if ('.$options['fullview'].') {
+							$("#templates .bottext .view").remove();
 						}
 					} else {
-						$.each($('#templates .ft_image'), function(i, item) {
-							$(this).find('a div').css({width:'145px', height:'156px', background:'url(/wp-content/plugins/template-help_wordpress/preload-template.jpg)', border: '0px'}).html('');
-							$(this).find('a').attr('href', 'http://www.templatemonster.com/?aff=<?=trim($options['aff'])?>');
+						$.each($("#templates .ft_image"), function(i, item) {
+							$(this).find("a div").css({width:"145px", height:"156px", background:"url(/wp-content/plugins/template-help_wordpress/preload-template.jpg)", border: "0px"}).html("");
+							$(this).find("a").attr("href", "http://www.templatemonster.com/?aff='.trim($options['aff']).'");
 						});
 					}
 				});
 			});
-		</script>
-	<? }
+		</script>';
+	}
 
 	// Tell Dynamic Sidebar about our new widget and its control
 	register_sidebar_widget(array('Theme Widget from Template-Help', 'widgets'), 'widget_template_help');
@@ -219,7 +219,7 @@ if (!function_exists('curl_get_file_contents')) {
 	  curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
 	  curl_setopt($c, CURLOPT_MAXREDIRS, 8);
 	  curl_setopt($c, CURLOPT_FRESH_CONNECT, TRUE);
-	  
+
 	  curl_setopt($c, CURLOPT_URL, $URL);
 	  $contents = trim(curl_exec($c));
 	  if(curl_errno($c)) {
@@ -236,6 +236,8 @@ function get_url() {
 	$type = intval($options['type']);
 	$cat = intval($options['cat']);
 	$count = intval($options['count']);
+	if (!$count)
+		$count=3;
 	$aff = trim($options['aff']);
 	$wap = trim($options['wap']);
 	if ($aff=='') {
