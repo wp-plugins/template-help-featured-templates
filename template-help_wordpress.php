@@ -3,7 +3,7 @@
 Plugin Name: Template_Help Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via ajax
 Author: TemplateHelp.com
-Version: 2.1
+Version: 2.1.1
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
@@ -147,7 +147,7 @@ function widget_template_help_init() {
     	<div class="ft_image">
 				<a href="#" target="_blank">
 					<div style="border: 1px solid #b9babc;width:143px;height:154px;background:#fff;">
-						<img src="/wp-content/plugins/template-help_wordpress/ajax-loader.gif" style="border:0px;padding:62px 57px;"/>
+						<img src="../../wp-content/plugins/template-help_wordpress/ajax-loader.gif" style="border:0px;padding:62px 57px;"/>
 					</div>
 				</a>
 				<div class="bottext">
@@ -167,7 +167,7 @@ function widget_template_help_init() {
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		<script>
 			$(function(){
-				$.getJSON("/wp-admin/admin-ajax.php",
+				$.getJSON("../../wp-admin/admin-ajax.php",
 				{action:"get_url"},
 				function(data){
 					if (typeof(data.error) != "undefined" && !data.error) {
@@ -195,7 +195,7 @@ function widget_template_help_init() {
 						}
 					} else {
 						$.each($("#templates .ft_image"), function(i, item) {
-							$(this).find("a div").css({width:"145px", height:"156px", background:"url(/wp-content/plugins/template-help_wordpress/preload-template.jpg)", border: "0px"}).html("");
+							$(this).find("a div").css({width:"145px", height:"156px", background:"url(../../wp-content/plugins/template-help_wordpress/preload-template.jpg)", border: "0px"}).html("");
 							$(this).find("a").attr("href", "http://www.templatemonster.com/?aff='.trim($options['aff']).'");
 						});
 					}
@@ -268,7 +268,7 @@ function th_admin_warnings() {
 	if ($options['aff'] == '' || $options['aff'] == DEFAULT_AFF) {
 		function th_warning() {
 			echo '
-			<div id="th-warning" class="updated fade"><p><strong>Template-Help Widget is almost ready.</strong> You must <a href="/wp-admin/widgets.php">configure Affiliate and WebAPI Password</a> for it to work.</p></div>
+			<div id="th-warning" class="updated fade"><p><strong>Template-Help Widget is almost ready.</strong> You must <a href="../../wp-admin/widgets.php">configure Affiliate and WebAPI Password</a> for it to work.</p></div>
 			';
 		}
 		add_action('admin_notices', 'th_warning');
