@@ -3,7 +3,7 @@
 Plugin Name: Template_Help Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via ajax
 Author: TemplateHelp.com
-Version: 2.1.3
+Version: 2.1.4
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
@@ -149,10 +149,8 @@ function widget_template_help_init() {
     	echo '
     	<td align="center" style="padding:3px">
     	<div class="ft_image">
-				<a href="#" target="_blank">
-					<div style="border: 1px solid #b9babc;width:143px;height:154px;background:#fff;">
-						<img src="'.get_plugin_path().'/ajax-loader.gif" style="border:0px;padding:62px 57px;"/>
-					</div>
+				<a href="#" target="_blank" style="border: 1px solid #b9babc;width:143px;height:154px;background:#fff;display:block;">
+					<img src="'.get_plugin_path().'/ajax-loader.gif" style="border:0px;padding:62px 57px;"/>
 				</a>
 				<div class="bottext">
 					<a target="_blank" class="view" href="#">View Template</a>
@@ -181,15 +179,14 @@ function widget_template_help_init() {
 								var $obj = $(this);
 								imgs[i] = new Image();
 		  					jQuery(imgs[i]).load(function(){
-		  						$obj.find("a div img").fadeOut();
-		  						$obj.find("a div").animate({width:imgs[i].width, height:imgs[i].height}, 400, function(){
+		  						$obj.find("a img").fadeOut();
+		  						$obj.find("a").animate({width:imgs[i].width, height:imgs[i].height}, 400, function(){
 		  							$(this).find("img").css("padding", "0px").attr("src", data.templates[i].src).fadeIn();
-		  						});
+		  						}).attr("href", data.templates[i].href);
+		  						if ('.$options['fullview'].') {
+										$obj.find(".bottext").html("<a href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price : \$"+data.templates[i].price+"</a> | <a href=\'"+data.templates[i].href+"\' target=\'_blank\'>Details</a><br/>Downloads : "+data.templates[i].downloads);
+									}
 		  					}).attr("src",data.templates[i].src);
-								$(this).find("a").attr("href", data.templates[i].href);
-								if ('.$options['fullview'].') {
-									$(this).find(".bottext").prepend("<a href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price : \$"+data.templates[i].price+"</a> | <a href=\'"+data.templates[i].href+"\' target=\'_blank\'>Details</a><br/>Downloads : "+data.templates[i].downloads);
-								}
 							} else {
 								$(this).remove();
 							}
@@ -199,8 +196,7 @@ function widget_template_help_init() {
 						}
 					} else {
 						$.each($("#templates .ft_image"), function(i, item) {
-							$(this).find("a div").css({width:"145px", height:"156px", background:"url('.get_plugin_path().'/preload-template.jpg)", border: "0px"}).html("");
-							$(this).find("a").attr("href", "http://www.templatemonster.com/?aff='.trim($options['aff']).'");
+							$(this).find("a").css({width:"145px", height:"156px", background:"url('.get_plugin_path().'/preload-template.jpg)", border: "0px"}).attr("href","http://www.templatemonster.com/?aff='.trim($options['aff']).'").html("");
 						});
 					}
 				});
