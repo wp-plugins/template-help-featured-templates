@@ -3,7 +3,7 @@
 Plugin Name: Template_Help Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via ajax
 Author: TemplateHelp.com
-Version: 2.1.4
+Version: 2.1.5
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
@@ -134,8 +134,10 @@ function widget_template_help_init() {
 				</div>';
 	}
 
-	function get_plugin_path() {
-		return get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__));
+	if (!function_exists('get_plugin_path')) {
+		function get_plugin_path() {
+			return get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__));
+		}
 	}
 
 	// This prints the widget
@@ -210,26 +212,6 @@ function widget_template_help_init() {
 
 }
 
-if (!function_exists('curl_get_file_contents')) {
-	function curl_get_file_contents($URL) {
-	  $c = curl_init();
-	  curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-	  curl_setopt($c, CURLOPT_TIMEOUT, 60);//in seconds
-	  curl_setopt($c, CURLOPT_AUTOREFERER, TRUE);
-	  curl_setopt($c, CURLOPT_FOLLOWLOCATION, TRUE);
-	  curl_setopt($c, CURLOPT_MAXREDIRS, 8);
-	  curl_setopt($c, CURLOPT_FRESH_CONNECT, TRUE);
-
-	  curl_setopt($c, CURLOPT_URL, $URL);
-	  $contents = trim(curl_exec($c));
-	  if(curl_errno($c)) {
-	  	$result = curl_errno($c) ? false : $contents;
-	  }
-	  curl_close($c);
-	  return $contents;
-	}
-}
-
 function get_url() {
 	header('Cache-control: no-cache');
 	$options = (array) get_option('widget_template_help');
@@ -244,7 +226,7 @@ function get_url() {
 		$aff = DEFAULT_AFF;
 		$wap = DEFAULT_PASS;
 	}
-	$file = curl_get_file_contents('http://api.templatemonster.com/wpinc.php?login='.$aff.'&webapipassword='.$wap.'&type='.$type.'&cat='.$cat.'&count='.$count);
+	$file = file_get_contents('http://api.templatemonster.com/wpinc.php?login='.$aff.'&webapipassword='.$wap.'&type='.$type.'&cat='.$cat.'&count='.$count);
 	$items = (strpos($file, 'Unauthorized usage')!==false) ? array() : explode("\n", $file);
 	$templates = array();
 	if (!empty($items)) {
