@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Template_Help Featured Templates
-Description: Displays Featured Templates from TemplateHelp.com collection via ajax
+Plugin Name: TemplateHelp Featured Templates
+Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 2.2.0
+Version: 2.2.1
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
