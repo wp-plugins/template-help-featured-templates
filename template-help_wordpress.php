@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 2.2.1
+Version: 2.3.0
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
@@ -50,6 +50,10 @@ function widget_template_help_init() {
 			$newoptions['aff'] = strip_tags(stripslashes($_POST['template_help-aff']));
 			/*wap*/
 			$newoptions['wap'] = strip_tags(stripslashes($_POST['template_help-wap']));
+			/*pr_code*/
+			$newoptions['pr_code'] = strip_tags(stripslashes($_POST['template_help-pr_code']));
+			/*shop_url*/
+			$newoptions['shop_url'] = strip_tags(stripslashes($_POST['template_help-shop_url']));
 			/*count*/
 			$newoptions['count'] = (int) $_POST['template_help-count'];
 			if(($newoptions['count']<1)||($newoptions['count']>10))
@@ -60,6 +64,12 @@ function widget_template_help_init() {
 			$newoptions['cat'] = strip_tags(stripslashes($_POST['template_help-cat']));
 			/*type*/
 			$newoptions['type'] = strip_tags(stripslashes($_POST['template_help-type']));
+			/*vaturl*/
+			$newoptions['vaturl'] = strip_tags(stripslashes($_POST['view-all-templates-url']));
+			/*vattitle*/
+      $newoptions['vattitle'] = strip_tags(stripslashes($_POST['view-all-templates-title']));
+      /*vattarget*/
+      $newoptions['vattarget'] = strip_tags(stripslashes($_POST['view-all-templates-target']));
 		}
 		if ($options['aff'] == '') {
 			$newoptions['aff'] = DEFAULT_AFF;
@@ -83,6 +93,16 @@ function widget_template_help_init() {
 		<label for="template_help-wap" style="line-height:35px;display:block;">';
 		_e('WebAPI Password:', 'widgets');
 		echo '<input type="text" id="template_help-wap" name="template_help-wap" value="'.wp_specialchars($options['wap'], true).'" />
+		</label>
+
+		<label for="template_help-pr_code" style="line-height:35px;display:block;">';
+		_e('Preset code:', 'widgets');
+		echo '<input type="text" id="template_help-pr_code" name="template_help-pr_code" value="'.wp_specialchars($options['pr_code'], true).'" />
+		</label>
+
+		<label for="template_help-shop_url" style="line-height:35px;display:block;">';
+		_e('Shop URL:', 'widgets');
+		echo '<input type="text" id="template_help-shop_url" name="template_help-shop_url" value="'.wp_specialchars($options['shop_url'], true).'" />
 		</label>
 
 		<label for="template_help-count" style="line-height:35px;display:block;">';
@@ -120,7 +140,21 @@ function widget_template_help_init() {
 			}
 		echo '
    	</select>
-
+		<fieldset style="border:1px solid #666;padding:3px;margin:5px 0" >
+      <legend>View All Templates Button:</legend>
+      <label for="view-all-templates-url" style="line-height:35px;display:block;">';
+			_e('URL (<em>optional</em>):', 'widgets');
+			echo '<input type="text" id="view-all-templates-url" name="view-all-templates-url" value="'.wp_specialchars($options['vaturl'], true).'" />
+      </label>
+      <label for="view-all-templates-title" style="line-height:35px;display:block;">';
+			_e('Title (<em>optional</em>):', 'widgets');
+			echo '<input type="text" id="view-all-templates-title" name="view-all-templates-title" value="'.wp_specialchars($options['vattitle'], true).'" />
+      </label>
+      <label for="view-all-templates-title" style="line-height:35px;display:block;">';
+			_e('Link target (<em>optional</em>):', 'widgets');
+			echo '<input type="text" id="view-all-templates-target" name="view-all-templates-target" value="'.wp_specialchars($options['vattarget'], true).'" />
+      </label>
+    </fieldset>
 		<input type="hidden" name="template_help-submit" id="template_help-submit" value="1" />
 		</div>';
 	}
@@ -144,6 +178,13 @@ function widget_template_help_init() {
 			echo '</div>
 			<div class="clear"></div>
 		</div>';
+		if($options['vaturl'] != '') {
+      echo '<div class="view-all-button">'
+          .'<a target="'.$options['vattarget'].'"href="'.$options['vaturl'].'" title="'.$options['vattitle'].'" id="view_all_templates" class="button_lbg"><span class="button_rbg"><span class="button_bg">'.$options['vattitle'].'</span></span></a>'
+          .'<div class="clear"></div>'
+          .'</div>';
+    }
+
 		echo $after_widget;
 		?>
 		<script>
@@ -213,13 +254,15 @@ function get_url() {
 		$aff = DEFAULT_AFF;
 		$wap = DEFAULT_PASS;
 	}
+	$pr_code = trim($options['pr_code']);
+	$shop_url = trim($options['shop_url']);
 	$context = stream_context_create(array(
     'http' => array(
         'timeout' => 10      // Timeout in seconds
     )
 	));
-	$contents = trim(@file_get_contents('http://api.templatemonster.com/wpinc.php?login='.$aff.'&webapipassword='.$wap.'&type='.$type.'&cat='.$cat.'&count='.$count, 0, $context));
-	if (!empty($contents)) {
+	$contents = trim(@file_get_contents('http://api.templatemonster.com/wpinc.php?login='.$aff.'&webapipassword='.$wap.'&type='.$type.'&cat='.$cat.'&count='.$count.'&pr_code='.$pr_code, 0, $context));
+		if (!empty($contents)) {
 		$items = (strpos($contents, 'Unauthorized usage')!==false) ? array() : explode("\n", $contents);
 		$templates = array();
 		if (!empty($items) || count($items)>$count) {
@@ -230,13 +273,22 @@ function get_url() {
 						$templates = array();
 						break;
 					}
-					$templates[$i]['src']=$template[0];
-					$templates[$i]['href']=$template[1]."?aff=$aff";
-					$templates[$i]['price']=$template[2];
-					$templates[$i]['downloads']=$template[3];
-					$templates[$i]['cart']=$template[4]."&aff=".$aff;
-					preg_match('/[^0-9]+([0-9]+)\.html/', $template[1], $matches);
-					$templates[$i]['tid']=$matches[1];
+					$templates[$i]['src'] = $template[0];
+					$templates[$i]['cart'] = $template[4];
+					if ($pr_code) {
+						$templates[$i]['tid'] = $template[1];
+						$templates[$i]['href'] = $shop_url.'/show.php?id='.$templates[$i]['tid'];
+					} else {
+						$templates[$i]['href'] = $template[1];
+						preg_match('/[^0-9]+([0-9]+)\.html/', $template[1], $matches);
+						$templates[$i]['tid'] = $matches[1];
+						if ($aff) {
+							$templates[$i]['href'] = $templates[$i]['href']."?aff=$aff";
+							$templates[$i]['cart'] = $templates[$i]['cart']."&aff=$aff";
+						}
+					}
+					$templates[$i]['price'] = $template[2];
+					$templates[$i]['downloads'] = $template[3];
 				}
 			}
 		}
