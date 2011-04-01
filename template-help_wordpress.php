@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 2.3.0
+Version: 2.3.1
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
@@ -235,8 +235,8 @@ function widget_template_help_init() {
 	}
 
 	// Tell Dynamic Sidebar about our new widget and its control
-	register_sidebar_widget(array('Theme Widget from Template-Help', 'widgets'), 'widget_template_help');
-	register_widget_control(array('Theme Widget from Template-Help', 'widgets'), 'widget_template_help_control');
+	register_sidebar_widget(array('TemplateHelp Featured Templates', 'widgets'), 'widget_template_help');
+	register_widget_control(array('TemplateHelp Featured Templates', 'widgets'), 'widget_template_help_control');
 
 }
 
