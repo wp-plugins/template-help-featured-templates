@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 2.3.1
+Version: 2.3.2
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
@@ -196,7 +196,7 @@ function widget_template_help_init() {
 		<script>
 			jQuery(function(){
 				jQuery.getJSON("'.get_option('home').'/wp-admin/admin-ajax.php",
-				{action:"get_url"},
+				{action:"get_url", request_url:"http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'"},
 				function(data){
 					if (typeof(data.error) != "undefined" && !data.error) {
 						imgs = new Array();
@@ -261,8 +261,16 @@ function get_url() {
         'timeout' => 10      // Timeout in seconds
     )
 	));
-	$contents = trim(@file_get_contents('http://api.templatemonster.com/wpinc.php?login='.$aff.'&webapipassword='.$wap.'&type='.$type.'&cat='.$cat.'&count='.$count.'&pr_code='.$pr_code, 0, $context));
-		if (!empty($contents)) {
+	$data_url = array('login'=>$aff,
+										'webapipassword'=>$wap,
+										'type'=>$type,
+										'cat'=>$cat,
+										'count'=>$count,
+										'pr_code'=>$pr_code,
+										'request_url'=>$_REQUEST['request_url'],
+										'widget_version'=>'2.3.2');
+	$contents = trim(@file_get_contents('http://api.templatemonster.com/wpinc.php?'.http_build_query($data_url), 0, $context));
+	if (!empty($contents)) {
 		$items = (strpos($contents, 'Unauthorized usage')!==false) ? array() : explode("\n", $contents);
 		$templates = array();
 		if (!empty($items) || count($items)>$count) {
@@ -274,6 +282,9 @@ function get_url() {
 						break;
 					}
 					$templates[$i]['src'] = $template[0];
+					$size = @getimagesize($templates[$i]['src']);
+					if (!$size || $size['mime'] != 'image/jpeg')
+						$templates[$i]['src'] = get_option('home')."/wp-content/plugins/".plugin_basename(dirname(__FILE__))."/preload-template.jpg";
 					$templates[$i]['cart'] = $template[4];
 					if ($pr_code) {
 						$templates[$i]['tid'] = $template[1];
