@@ -38,3 +38,9 @@
   text-align: center;
   display:none;
 }
+.preview_image_link {
+border:1px solid #b9babc;width:143px;height:154px;background:#fff;display:block;
+}
+.preview_image_link img{
+border:0px;padding:62px 57px;
+}

@@ -3,14 +3,14 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 2.4
+Version: 2.5
 Author URI: http://www.mytemplatestorage.com
 */
 add_action('wp_ajax_get_url', 'get_url');
 add_action('wp_ajax_nopriv_get_url', 'get_url');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '2.4');
+define('TH_WIDGET_VERSION', '2.5');
 function get_categories_list() {
 	$cats = array();
 	$file = @fopen("http://api.templatemonster.com/wpinc/categories.txt", "r");
@@ -80,6 +80,22 @@ function widget_template_help_init() {
 			$options = $newoptions;
 			update_option('widget_template_help', $options);
 		}
+
+
+		echo '<div style="text-align:right">
+		<label for="template_help-title" style="line-height:35px;display:block;">';
+		_e('Widget title:', 'widgets');
+		echo '<input style="width:99%;" type="text" id="template_help-title" name="template_help-title" value="'.wp_specialchars($options['title'], true).'" />
+		</label>
+		<label for="template_help-aff" style="line-height:35px;display:block;">';
+		_e('Affiliate:', 'widgets');
+		echo '</label><input style="width:99%;" type="text" id="template_help-aff" name="template_help-aff" value="'.wp_specialchars($options['aff'], true).'" />
+		<label for="template_help-wap" style="line-height:35px;display:block;">';
+		_e('WebAPI Password:', 'widgets');
+		echo '<input style="width:99%;" type="text" id="template_help-wap" name="template_help-wap" value="'.wp_specialchars($options['wap'], true).'" />
+		</label><br/>';
+
+
 		echo '<div style="text-align:right;">
 		<label for="sell_tm" style="text-align:right;width:190px;"><input type="checkbox" id="sell_tm" name="sell_tm">&nbsp;';
 		_e('I want to sell through TemplateMonster.com', 'widgets');
@@ -102,32 +118,6 @@ function widget_template_help_init() {
 			</label><br/>
 		</fieldset></div>';
 
-		echo '<div style="text-align:right">
-		<label for="template_help-title" style="line-height:35px;display:block;">';
-		_e('Widget title:', 'widgets');
-		echo '<input type="text" id="template_help-title" name="template_help-title" value="'.wp_specialchars($options['title'], true).'" />
-		</label>
-
-		<label for="template_help-aff" style="line-height:35px;display:block;">';
-		_e('Affiliate:', 'widgets');
-		echo '<input type="text" id="template_help-aff" name="template_help-aff" value="'.wp_specialchars($options['aff'], true).'" />
-		</label>
-
-		<label for="template_help-wap" style="line-height:35px;display:block;">';
-		_e('WebAPI Password:', 'widgets');
-		echo '<input type="text" id="template_help-wap" name="template_help-wap" value="'.wp_specialchars($options['wap'], true).'" />
-		</label>';
-/*
-		<label for="template_help-pr_code" style="line-height:35px;display:block;">';
-		_e('Preset code:', 'widgets');
-		echo '<input type="text" id="template_help-pr_code" name="template_help-pr_code" value="'.wp_specialchars($options['pr_code'], true).'" />
-		</label>
-
-		<label for="template_help-shop_url" style="line-height:35px;display:block;">';
-		_e('Shop URL:', 'widgets');
-		echo '<input type="text" id="template_help-shop_url" name="template_help-shop_url" value="'.wp_specialchars($options['shop_url'], true).'" />
-		</label>
-*/
 		echo '<label for="template_help-count" style="line-height:35px;display:block;">';
 		_e('Number of templates to display: (1-10)', 'widgets');
 		echo '<input type="text" id="template_help-count" name="template_help-count" value="'.$options['count'].'" style="width:18px" />
@@ -229,8 +219,8 @@ function widget_template_help_init() {
 		echo '<div id="featured_templates">'.$before_title . $options['title'] . $after_title.'<div id="templates">';
 			for ($i=1; $i<=$options['count']; $i++) {
 				echo '<div class="ft_image">
-					<a target="_blank" style="border:1px solid #b9babc;width:143px;height:154px;background:#fff;display:block;" href="http://store.templatemonster.com/?aff='.trim($options['aff']).'">
-						<img src="'.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/ajax-loader.gif" alt="template #" style="border:0px;padding:62px 57px;"/>
+					<a class="preview_image_link" onmouseout="hidetrail()" target="_blank" href="http://store.templatemonster.com/?aff='.trim($options['aff']).'">
+						<img src="'.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/img/ajax-loader.gif" alt="template #"/>
 					</a>
 					<div class="bottext">
 						<a target="_blank" class="view" href="#">View Template</a>
@@ -249,16 +239,18 @@ function widget_template_help_init() {
 
 		echo $after_widget;
 		?>
+		<script type="text/javascript" src="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/js/preview_templates.js"></script>
 		<script>
 		if (typeof(jQuery) == 'undefined')
 			document.write('<scr' + 'ipt type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></scr' + 'ipt>');
-		</script><?php
-		echo '
-		<link rel="stylesheet" type="text/css" href="'.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/style.css" />
+		</script>
+		<div style="display: none; position: absolute;z-index:110;" id="preview_div"> </div>
+		<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/style.css" />
+		<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/preview.css" />
 		<script>
 			jQuery(function(){
-				jQuery.getJSON("'.get_option('home').'/wp-admin/admin-ajax.php",
-				{action:"get_url", request_url:"http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'"},
+				jQuery.getJSON("<?php echo get_option('home')?>/wp-admin/admin-ajax.php",
+				{action:"get_url", request_url:"http://<?php echo $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']?>"},
 				function(data){
 					if (typeof(data.error) != "undefined" && !data.error) {
 						imgs = new Array();
@@ -266,13 +258,16 @@ function widget_template_help_init() {
 							if (data.templates[i]) {
 								var $obj = jQuery(this);
 								imgs[i] = new Image();
-		  					jQuery(imgs[i]).load(function(){
+								jQuery(imgs[i]).load(function(){
 		  						$obj.find("a img").fadeOut();
-		  						$obj.find("a:has(\'img\')").animate({width:imgs[i].width, height:imgs[i].height, marginTop:154-imgs[i].height}, 400, function(){
+		  						$obj.find("a:has('img')").animate({width:imgs[i].width, height:imgs[i].height, marginTop:154-imgs[i].height}, 400, function(){
 		  							jQuery(this).find("img").css("padding", "0px").attr({src:data.templates[i].src, alt:"template #"+data.templates[i].tid}).fadeIn();
+		  							jQuery(this).mouseover(function(){
+		  								showtrail('"'+data.templates[i].big.src,"Template "+data.templates[i].tid,parseInt(data.templates[i].big.width),parseInt(data.templates[i].big.height));
+										});
 		  						}).attr("href", data.templates[i].href);
-		  						if ('.$options['fullview'].') {
-										$obj.find(".bottext").html("<a href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price : \$"+data.templates[i].price+"</a> | <a href=\'"+data.templates[i].href+"\' target=\'_blank\'>Details</a><br/>Downloads : "+data.templates[i].downloads);
+		  						if (<?php echo $options['fullview']?>) {
+										$obj.find(".bottext").html("<a href='"+data.templates[i].cart+"' target='_blank'>Price : $"+data.templates[i].price+"</a> | <a href='"+data.templates[i].href+"' target='_blank'>Details</a><br/>Downloads : "+data.templates[i].downloads);
 									} else {
 										$obj.find(".bottext a").attr("href",data.templates[i].href);
 									}
@@ -281,20 +276,20 @@ function widget_template_help_init() {
 								jQuery(this).remove();
 							}
 						});
-						if ('.$options['fullview'].') {
+						if (<?php echo $options['fullview']?>) {
 							jQuery("#templates .bottext .view").remove();
 						}
 						jQuery("#templates .bottext").fadeIn();
 					} else {
 						jQuery.each(jQuery("#templates .ft_image"), function(i, item) {
-							jQuery(this).find("a").css({width:"145px", height:"156px", background:"url('.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/preload-template.jpg)", border: "0px"}).attr("href","http://store.templatemonster.com/?aff='.trim($options['aff']).'").html("");
+							jQuery(this).find("a").css({width:"145px", height:"156px", background:"url(<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/img/preload-template.jpg)", border: "0px"}).attr("href","http://store.templatemonster.com/?aff=<?php echo trim($options['aff'])?>").html("");
 						});
 						jQuery("#templates .ft_image").css({height:"170px"});
 					}
 				});
 			});
-		</script>';
-	}
+		</script>
+	<?php }
 
 	// Tell Dynamic Sidebar about our new widget and its control
 	register_sidebar_widget(array('TemplateHelp Featured Templates', 'widgets'), 'widget_template_help');
@@ -312,7 +307,7 @@ function get_url() {
 		$count=3;
 	$aff = trim($options['aff']);
 	$wap = trim($options['wap']);
-	$sell = isset($options['sell']) ? trim($options['sell']) : 'sell_tm';
+	$sell = isset($options['sell']) ? trim($options['sell']) : 'tm';
 	if ($aff=='') {
 		$aff = DEFAULT_AFF;
 		$wap = DEFAULT_PASS;
@@ -355,8 +350,9 @@ function get_url() {
 					$templates[$i]['src'] = $template[0];
 					$size = @getimagesize($templates[$i]['src']);
 					if (!$size || $size['mime'] != 'image/jpeg')
-						$templates[$i]['src'] = get_option('home')."/wp-content/plugins/".plugin_basename(dirname(__FILE__))."/preload-template.jpg";
+						$templates[$i]['src'] = get_option('home')."/wp-content/plugins/".plugin_basename(dirname(__FILE__))."/img/preload-template.jpg";
 					$templates[$i]['cart'] = $template[4];
+					$templates[$i]['big'] = array('src'=>$template[5], 'width'=>$template[6], 'height'=>$template[7]);
 					if ($pr_code) {
 						$templates[$i]['tid'] = $template[1];
 						$templates[$i]['href'] = 'http://www.templatehelp.com/preset/pr_preview.php?i='.$templates[$i]['tid'].'&pr_code='.$pr_code;
