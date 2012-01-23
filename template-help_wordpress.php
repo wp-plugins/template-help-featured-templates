@@ -3,25 +3,41 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.0
+Version: 3.1
 Author URI: http://www.mytemplatestorage.com
 */
+include_once('ssga.class.php');
 add_action('wp_ajax_get_url', 'get_url');
 add_action('wp_ajax_nopriv_get_url', 'get_url');
+add_action('wp_ajax_ga_click', 'ga_click');
+define('GA_ID', 'UA-1578076-8');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '3.0');
+define('TH_WIDGET_VERSION', '3.1');
 add_action('admin_menu', 'th_ft_init');
+add_action('activate_template-help-featured-templates/template-help_wordpress.php', 'th_alter_table');
 global $th_ft_widget_scripts;
 $th_ft_widget_scripts=0;
+
 function th_ft_init() {
 	if (function_exists('add_options_page')) {
 		add_options_page('TH Featured Templates', 'TH Featured Templates', 10, 'th-featured-templates', 'th_featured_templates');
   }
 }
 
+function th_alter_table() {
+	global $wpdb;
+	if (!$wpdb->query("ALTER TABLE $wpdb->posts ADD `wpinc_update` DATETIME NOT NULL")) {
+    //$wpdb->print_error();
+  }
+}
+
 function th_featured_templates() {
 	$options = $newoptions = get_option('widget_template_help_post');
+	if ($options['aff'] == '') {
+		$newoptions['aff'] = DEFAULT_AFF;
+		$newoptions['wap'] = DEFAULT_PASS;
+	}
 	if ( $_POST['template_help-submit'] ) {
 		$newoptions['sell'] = isset($_POST['sell_tm']) ? 'tm' : strip_tags(stripslashes($_POST['sell']));
 		/*title*/
@@ -44,16 +60,14 @@ function th_featured_templates() {
 		$newoptions['cat'] = strip_tags(stripslashes($_POST['template_help-cat']));
 		/*type*/
 		$newoptions['type'] = strip_tags(stripslashes($_POST['template_help-type']));
+		/*keywords*/
+		$newoptions['keywords'] = strip_tags(stripslashes($_POST['template_help-keywords']));
 		/*vaturl*/
 		$newoptions['vaturl'] = strip_tags(stripslashes($_POST['view-all-templates-url']));
 		/*vattitle*/
     $newoptions['vattitle'] = strip_tags(stripslashes($_POST['view-all-templates-title']));
     /*vattarget*/
     $newoptions['vattarget'] = strip_tags(stripslashes($_POST['view-all-templates-target']));
-	}
-	if ($options['aff'] == '') {
-		$newoptions['aff'] = DEFAULT_AFF;
-		$newoptions['wap'] = DEFAULT_PASS;
 	}
 	if ( $options != $newoptions ) {
 		$options = $newoptions;
@@ -76,11 +90,13 @@ function th_ft( $atts, $content = null ) {
       'type' => intval($options['type']),
       'cat' => intval($options['cat']),
       'title' => wp_specialchars($options['title'], true),
+      'keywords' => wp_specialchars($options['keywords'], true),
   ), $atts));
   $options['count'] = $count;
   $options['type'] = $type;
   $options['cat'] = $cat;
   $options['title'] = $title;
+  $options['keywords'] = $keywords;
   return show_th_ft_widget($options, 0);
 }
 add_shortcode('th_ft', 'th_ft');
@@ -96,6 +112,7 @@ function get_categories_list() {
 	}
 	return $cats;
 }
+
 function get_types_list() {
 	$types = array();
 	$file = @fopen("http://api.templatemonster.com/wpinc/types.txt", "r");
@@ -179,6 +196,12 @@ function show_th_ft_form($options, $align='right') {
 		}
 	echo '
 	</select>
+
+	<label for="template_help-types" style="line-height:35px;display:block;">';
+	_e('Keywords:', 'widgets');
+	echo '</label>
+	<textarea style="width:100%" name="template_help-keywords">'.wp_specialchars($options['keywords'], true).'</textarea>
+
 	<fieldset style="border:1px solid #ccc;padding:3px;margin:5px 0" >
     <legend style="color:#777;">View All Templates Button:</legend>
     <label for="view-all-templates-url" style="line-height:35px;display:block;">';
@@ -271,6 +294,8 @@ function widget_template_help_init() {
 			$newoptions['cat'] = strip_tags(stripslashes($_POST['template_help-cat']));
 			/*type*/
 			$newoptions['type'] = strip_tags(stripslashes($_POST['template_help-type']));
+			/*keywords*/
+			$newoptions['keywords'] = strip_tags(stripslashes($_POST['template_help-keywords']));
 			/*vaturl*/
 			$newoptions['vaturl'] = strip_tags(stripslashes($_POST['view-all-templates-url']));
 			/*vattitle*/
@@ -297,6 +322,21 @@ function widget_template_help_init() {
 		<script type="text/javascript">
 		if (typeof(jQuery) == 'undefined')
 			document.write('<scr' + 'ipt type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></scr' + 'ipt>');
+		jQuery(window).load(function() {
+				jQuery('.view-all-button').live('click',function(){
+					jQuery.post("<?php echo get_option('home')?>/wp-admin/admin-ajax.php",
+						{action: "ga_click", event: "Click-view-all-templates"}
+					);
+				});
+				jQuery('.ft_image a.preview_image_link, .ft_image a.view').live('click',function(){
+					var $obj = jQuery(this).parent();
+					if (!$obj.hasClass('ft_image'))
+						$obj = $obj.parent();
+					jQuery.post("<?php echo get_option('home')?>/wp-admin/admin-ajax.php",
+						{action: "ga_click", event: "Click-view-template", item: $obj.attr('t_id'), title: "<?php echo $post->post_title;?>"}
+					);
+				});
+		});
 		</script>
 		<div style="display: none; position: absolute;z-index:110;" id="preview_div"> </div>
 		<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/style.css" />
@@ -326,6 +366,7 @@ function widget_template_help_init() {
 				$cats[] = $cat->name;
 			}
 		}
+		$keywords = isset($options['keywords']) ? $options['keywords'] : '';
 		$result = '<div class="featured_templates clear">' . $options['title'] .'<div id="templates_'.$th_ft_widget_scripts.'" class="templates clear">';
 			for ($i=1; $i<=$options['count']; $i++) {
 				$result .= '<div class="ft_image">
@@ -349,60 +390,58 @@ function widget_template_help_init() {
     if (!$th_ft_widget_scripts)
 			$result .= th_ft_widget_scripts();
 
-		ob_start();
-		?>
-		<script type="text/javascript">
-			jQuery(function(){
-				<? $sell= isset($options['sell']) ? trim($options['sell']) : 'tm';?>
-				jQuery.getJSON("<?php echo get_option('home')?>/wp-admin/admin-ajax.php",
-				{action:"get_url", request_url:"http://<?php echo $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']?>",
-				count:<?php echo $options['count']?>, type:<?php echo intval($options['type'])?>, cat:<?php echo intval($options['cat'])?>,
-				title:'<?php echo $post->post_title?>', excerpt:'<?php echo $post->post_excerpt?>',
-				cats:'<?php echo implode(',',$cats)?>',
-				tags:'<?php echo implode(',',$tags)?>',
-				wpinc_update:<?php echo $wpinc_update;?>,
-				sell:'<?php echo $sell?>', shop_url: '<?php echo $options['shop_url']?>', pr_code: '<?php echo $options['pr_code']?>'},
+$sell= isset($options['sell']) ? trim($options['sell']) : 'tm';
+$bottext = $options['fullview'] ? '$obj.find(".bottext").html("<a href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price : $"+data.templates[i].price+"</a> | <a href=\'"+data.templates[i].href+"\' target=\_blank\'>Details</a><br/>Downloads : "+data.templates[i].downloads);' : '$obj.find(".bottext a").attr("href",data.templates[i].href);';
+$fullview = $options['fullview'] ? 'jQuery("#templates_'.$th_ft_widget_scripts.' .bottext .view").remove();' : '';
+$result .= '<script type="text/javascript">
+			jQuery(window).load(function() {
+				jQuery.getJSON("'.get_option('home').'/wp-admin/admin-ajax.php",
+				{action:"get_url", request_url:"http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'",
+				count:'.$options['count'].', type:'.intval($options['type']).', cat:'.intval($options['cat']).',
+				title:"'.$post->post_title.'", excerpt:"'.$post->post_excerpt.'",
+				keywords:"'.$keywords.'",
+				cats:"'.implode(',',$cats).'",
+				tags:"'.implode(',',$tags).'",
+				wpinc_update:'.$wpinc_update.',
+				sell:"'.$sell.'", shop_url:"'.$options['shop_url'].'", pr_code:"'.$options['pr_code'].'"},
 				function(data){
 					if (typeof(data.error) != "undefined" && !data.error) {
 						imgs = new Array();
-						jQuery.each(jQuery("#templates_<?php echo $th_ft_widget_scripts?> .ft_image"), function(i, item) {
+						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' .ft_image"), function(i, item) {
 							if (data.templates[i]) {
 								var $obj = jQuery(this);
-								$obj.attr('t_id', data.templates[i].tid);
+								$obj.attr("t_id", data.templates[i].tid);
 								imgs[i] = new Image();
 								jQuery(imgs[i]).load(function(){
 		  						$obj.find("a img").fadeOut();
-		  						$obj.find("a:has('img')").animate({width:imgs[i].width, height:imgs[i].height, marginTop:154-imgs[i].height}, 400, function(){
-		  							jQuery(this).find("img").css("padding", "0px").attr({src:data.templates[i].src, alt:"template #"+data.templates[i].tid}).fadeIn();
-		  							jQuery(this).mouseover(function(){
-		  								showtrail('"'+data.templates[i].big.src,"Template "+data.templates[i].tid,parseInt(data.templates[i].big.width),parseInt(data.templates[i].big.height));
-										});
-		  						}).attr("href", data.templates[i].href);
-		  						if (<?php echo $options['fullview']?>) {
-										$obj.find(".bottext").html("<a href='"+data.templates[i].cart+"' target='_blank'>Price : $"+data.templates[i].price+"</a> | <a href='"+data.templates[i].href+"' target='_blank'>Details</a><br/>Downloads : "+data.templates[i].downloads);
-									} else {
-										$obj.find(".bottext a").attr("href",data.templates[i].href);
+		  						if (typeof(imgs[i]) != "undefined") {
+			  						$obj.find("a:has(\'img\')").animate({width:imgs[i].width, height:imgs[i].height, marginTop:154-imgs[i].height}, 400, function(){
+			  							jQuery(this).find("img").css("padding", "0px").attr({src:data.templates[i].src, alt:"template #"+data.templates[i].tid}).fadeIn();
+	jQuery(this).mouseover(function(){
+			  								showtrail(\'"\'+data.templates[i].big.src,"Template "+data.templates[i].tid,parseInt(data.templates[i].big.width),parseInt(data.templates[i].big.height));
+											});
+			  						}).attr("href", data.templates[i].href);
+			  						'.$bottext.'
+									}
+									else {
+									$obj.remove();
 									}
 		  					}).attr("src",data.templates[i].src);
 							} else {
 								jQuery(this).remove();
 							}
 						});
-						if (<?php echo $options['fullview']?>) {
-							jQuery("#templates_<?php echo $th_ft_widget_scripts?> .bottext .view").remove();
-						}
-						jQuery("#templates_<?php echo $th_ft_widget_scripts?> .bottext").fadeIn();
+						'.$fullview.'
+						jQuery("#templates_'.$th_ft_widget_scripts.' .bottext").fadeIn();
 					} else {
-						jQuery.each(jQuery("#templates_<?php echo $th_ft_widget_scripts?> .ft_image"), function(i, item) {
-							jQuery(this).find("a").css({width:"145px", height:"156px", background:"url(<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/img/preload-template.jpg)", border: "0px"}).attr("href","http://store.templatemonster.com/?aff=<?php echo trim($options['aff'])?>").html("");
+						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' .ft_image"), function(i, item) {
+							jQuery(this).find("a").css({width:"145px", height:"156px", background:"url('.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/img/preload-template.jpg)", border: "0px"}).attr("href","http://store.templatemonster.com/?aff='.trim($options['aff']).'").html("");
 						});
-						jQuery("#templates_<?php echo $th_ft_widget_scripts?> .ft_image").css({height:"170px"});
+						jQuery("#templates_'.$th_ft_widget_scripts.' .ft_image").css({height:"170px"});
 					}
 				});
 			});
-		</script>
-		<?
-		$result .= ob_get_clean();
+		</script>';
 		$th_ft_widget_scripts++;
 		if ($echo)
 			echo $result;
@@ -423,13 +462,36 @@ function widget_template_help_init() {
 
 }
 
+function ga_click() {
+	$event = isset($_REQUEST['event']) ? trim($_REQUEST['event']) : '';
+	$title = isset($_REQUEST['title']) ? trim($_REQUEST['title']) : '';
+	$item = isset($_REQUEST['item']) ? intval($_REQUEST['item']) : 0;
+	$host = "http://".$_SERVER['HTTP_HOST'];
+	$ga = new Elements_Tools_Serversideanalytics();
+	$ga->setAccountId(GA_ID);
+	$ga->setCharset("UTF-8");
+	$ga->setHostName($_SERVER['HTTP_HOST']);
+	$ga->setPageTitle($title);
+	$ga->setLanguage("en");
+	if ($item)
+		$ga->setEvent($event, $host, $item);
+	else
+		$ga->setEvent($event, $host);
+	$ga->createEvent();
+}
+
 function get_url() {
 	header('Cache-control: no-cache');
 	$options = (array) get_option('widget_template_help');
 	$options2 = (array) get_option('widget_template_help_post');
+	$wpinc_update = intval($_REQUEST['wpinc_update']);
 	$sell = trim($_REQUEST['sell']);
 	$type = intval($_REQUEST['type']);
 	$cat = intval($_REQUEST['cat']);
+	$tags = trim($_REQUEST['tags']);
+	$cats = trim($_REQUEST['cats']);
+	$keywords = trim($_REQUEST['keywords']);
+	$excerpt = trim($_REQUEST['excerpt']);
 	$count = intval($_REQUEST['count']);
 	$title = isset($_REQUEST['title']) ? trim($_REQUEST['title']) : '';
 	if (!$count)
@@ -467,12 +529,27 @@ function get_url() {
 										'count'=>$count,
 										'pr_code'=>$pr_code,
 										'request_url'=>$_REQUEST['request_url'],
+										'wpinc_update'=>$wpinc_update,
 										'widget_version'=>TH_WIDGET_VERSION);
+	if ($wpinc_update) {
+		$data_url = array_merge($data_url, array('tags'=>$tags,
+										'cats'=>$cats,
+										'keywords'=>$keywords,
+										'title'=>$title,
+										'excerpt'=>$excerpt,
+										));
+	}
 	$contents = trim(@file_get_contents('http://api.templatemonster.com/wpinc.php?'.http_build_query($data_url), 0, $context));
 	if (!empty($contents)) {
 		$items = (strpos($contents, 'Unauthorized usage')!==false) ? array() : explode("\n", $contents);
 		$templates = array();
 		if (!empty($items) || count($items)>$count) {
+			$ga = new Elements_Tools_Serversideanalytics();
+			$ga->setAccountId(GA_ID);
+			$ga->setCharset("UTF-8");
+			$ga->setHostName($_SERVER['HTTP_HOST']);
+			$ga->setPageTitle($title);
+			$ga->setLanguage("en");
 			foreach ($items as $i=>$item) {
 				if (!empty($item)) {
 					$template=explode("|", $item);
@@ -506,6 +583,8 @@ function get_url() {
 					}
 					$templates[$i]['price'] = $template[2];
 					$templates[$i]['downloads'] = $template[3];
+					$ga->setEvent("Views", "http://".$_SERVER['HTTP_HOST'], $templates[$i]['tid']);
+					$ga->createEvent();
 				}
 			}
 		}
