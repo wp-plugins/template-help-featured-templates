@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.1
+Version: 3.1.1
 Author URI: http://www.mytemplatestorage.com
 */
 include_once('ssga.class.php');
@@ -13,11 +13,23 @@ add_action('wp_ajax_ga_click', 'ga_click');
 define('GA_ID', 'UA-1578076-8');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '3.1');
+define('TH_WIDGET_VERSION', '3.1.1');
 add_action('admin_menu', 'th_ft_init');
 add_action('activate_template-help-featured-templates/template-help_wordpress.php', 'th_alter_table');
+add_filter('plugin_action_links', 'add_settings_link', 10, 2 );
 global $th_ft_widget_scripts;
 $th_ft_widget_scripts=0;
+
+function add_settings_link($links, $file) {
+	static $this_plugin;
+	if (!$this_plugin) $this_plugin = plugin_basename(__FILE__);
+
+	if ($file == $this_plugin){
+		$settings_link = '<a href="admin.php?page=th-featured-templates">'.__("Settings", "th-featured-templates").'</a>';
+	  array_unshift($links, $settings_link);
+	}
+	return $links;
+ }
 
 function th_ft_init() {
 	if (function_exists('add_options_page')) {
@@ -220,10 +232,7 @@ function show_th_ft_form($options, $align='right') {
 	<input type="hidden" name="template_help-submit" id="template_help-submit" value="1" />
 	</div>';
 	?>
-	<script>
-		if (typeof(jQuery) == 'undefined')
-			document.write('<scr' + 'ipt type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></scr' + 'ipt>');
-	</script>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 
 	<script type="text/javascript">
 	function aff_tool_check() {
@@ -318,11 +327,10 @@ function widget_template_help_init() {
 	function th_ft_widget_scripts() {
 		global $post;
 		?>
+		<script type="text/javascript"> if (window.jQuery == undefined) document.write( unescape('%3Cscript src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"%3E%3C/script%3E') );</script>
 		<script type="text/javascript" src="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/js/preview_templates.js"></script>
 		<script type="text/javascript">
-		if (typeof(jQuery) == 'undefined')
-			document.write('<scr' + 'ipt type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></scr' + 'ipt>');
-		jQuery(window).load(function() {
+		jQuery(function() {
 				jQuery('.view-all-button').live('click',function(){
 					jQuery.post("<?php echo get_option('home')?>/wp-admin/admin-ajax.php",
 						{action: "ga_click", event: "Click-view-all-templates"}
@@ -394,7 +402,7 @@ $sell= isset($options['sell']) ? trim($options['sell']) : 'tm';
 $bottext = $options['fullview'] ? '$obj.find(".bottext").html("<a href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price : $"+data.templates[i].price+"</a> | <a href=\'"+data.templates[i].href+"\' target=\_blank\'>Details</a><br/>Downloads : "+data.templates[i].downloads);' : '$obj.find(".bottext a").attr("href",data.templates[i].href);';
 $fullview = $options['fullview'] ? 'jQuery("#templates_'.$th_ft_widget_scripts.' .bottext .view").remove();' : '';
 $result .= '<script type="text/javascript">
-			jQuery(window).load(function() {
+			jQuery(function() {
 				jQuery.getJSON("'.get_option('home').'/wp-admin/admin-ajax.php",
 				{action:"get_url", request_url:"http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'",
 				count:'.$options['count'].', type:'.intval($options['type']).', cat:'.intval($options['cat']).',
@@ -406,7 +414,7 @@ $result .= '<script type="text/javascript">
 				sell:"'.$sell.'", shop_url:"'.$options['shop_url'].'", pr_code:"'.$options['pr_code'].'"},
 				function(data){
 					if (typeof(data.error) != "undefined" && !data.error) {
-						imgs = new Array();
+						var imgs = new Array();
 						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' .ft_image"), function(i, item) {
 							if (data.templates[i]) {
 								var $obj = jQuery(this);
