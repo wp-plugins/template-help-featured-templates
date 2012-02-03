@@ -1,9 +1,3 @@
-.featured_templates  {
-  /*padding-bottom: 18px;
-  padding-left: 0;
-  padding-right: 0;
-  padding-top: 9px;*/
-}
 .featured_templates  h3{
 	text-align:center;
 	padding:5px;
@@ -44,4 +38,4 @@ border:1px solid #b9babc;width:143px;height:154px;background:#fff;display:block;
 .preview_image_link img{
 border:0px;padding:62px 57px;
 }
-.clear {clear:both;}
+.clear2 {clear:both;}
