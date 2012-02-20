@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.1.2
+Version: 3.2
 Author URI: http://www.mytemplatestorage.com
 */
 include_once('ssga.class.php');
@@ -13,12 +13,29 @@ add_action('wp_ajax_ga_click', 'ga_click');
 define('GA_ID', 'UA-1578076-8');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '3.1.2');
+define('TH_WIDGET_VERSION', '3.2');
 add_action('admin_menu', 'th_ft_init');
 add_action('activate_template-help-featured-templates/template-help_wordpress.php', 'th_alter_table');
 add_filter('plugin_action_links', 'add_settings_link', 10, 2 );
 global $th_ft_widget_scripts;
 $th_ft_widget_scripts=0;
+
+add_action('wp_head', '_th_ft_css');
+
+function _th_ft_css() {
+	?>
+	<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/style.css" />
+	<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/preview.css" />
+	<?php
+	$options = get_option('widget_template_help');
+	$options['css'] = str_replace('._th_ft_', '.widget-area ._th_ft_',$options['css']);
+	$options_post = get_option('widget_template_help_post');
+	$custom_css = trim($options['css']." ".$options_post['css']);
+	if ($custom_css) {
+		echo "<style>$custom_css</style>";
+	}
+}
+
 
 function add_settings_link($links, $file) {
 	static $this_plugin;
@@ -54,6 +71,14 @@ function th_featured_templates() {
 		$newoptions['sell'] = isset($_POST['sell_tm']) ? 'tm' : strip_tags(stripslashes($_POST['sell']));
 		/*title*/
 		$newoptions['title'] = strip_tags(stripslashes($_POST['template_help-title']));
+		/*css*/
+		$newoptions['css'] = strip_tags(stripslashes($_POST['template_help-css']));
+		/*randomize*/
+		$newoptions['randomize'] = intval($_POST['template_help-randomize']);
+		/*randomize_depth*/
+		$newoptions['randomize_depth'] = (int) $_POST['template_help-randomize_depth'];
+		if(($newoptions['randomize_depth']<1)||($newoptions['randomize_depth']>300))
+			$newoptions['randomize_depth']=10;
 		/*aff*/
 		$newoptions['aff'] = strip_tags(stripslashes($_POST['template_help-aff']));
 		/*wap*/
@@ -175,16 +200,34 @@ function show_th_ft_form($options, $align='right') {
 
 	echo '<label for="template_help-count" style="line-height:35px;display:block;">';
 	_e('Number of templates to display: (1-10)', 'widgets');
-	echo '<input type="text" id="template_help-count" name="template_help-count" value="'.$options['count'].'" style="width:18px" />
+	echo '<input type="text" id="template_help-count" name="template_help-count" value="'.$options['count'].'" style="width:22px" />
 	</label>
 
 	<label for="template_help-fullview" style="line-height:35px;display:block;">';
-	_e('Display template\'s information :', 'widgets');
+	_e('Display template\'s information:', 'widgets');
 	$fullview = wp_specialchars($options['fullview'], true);
 	echo '<br/>
 	<input type="radio"	name="template_help-fullview" value="1"'.($fullview == 1 ? " checked" : "").'/> Full Details
 	<input type="radio"	name="template_help-fullview" value="0"'.($fullview == 0 ? " checked" : "").'/> Shorten Preview
 	</label>
+
+	<label for="template_help-randomize" style="line-height:35px;display:block;">';
+	_e('Randomize: ', 'widgets');
+	$randomize = wp_specialchars($options['randomize'], true);
+	echo '<br/>
+	<input type="radio"	name="template_help-randomize" value="1"'.($randomize == 1 ? " checked" : "").'/> Yes
+	<input type="radio"	name="template_help-randomize" value="0"'.($randomize == 0 ? " checked" : "").'/> No
+	</label>
+
+	<label for="template_help-randomize_depth" style="line-height:35px;display:block;">';
+	_e('Randomize Depth: ', 'widgets');
+	if ($options['randomize_depth']<1 || $options['randomize_depth'] > 300)
+		$randomize_depth = 10;
+	else
+		$randomize_depth	= $options['randomize_depth'];
+	echo '<input type="text" id="template_help-randomize_depth" name="template_help-randomize_depth" value="'.$randomize_depth.'" style="width:32px" />
+	</label>
+
 
 	<label for="template_help-cats" style="line-height:35px;display:block;">';
 	_e('Categories:', 'widgets');
@@ -213,6 +256,11 @@ function show_th_ft_form($options, $align='right') {
 	_e('Keywords:', 'widgets');
 	echo '</label>
 	<textarea style="width:100%" name="template_help-keywords">'.wp_specialchars($options['keywords'], true).'</textarea>
+
+	<label for="template_help-css" style="line-height:35px;display:block;">';
+	_e('Custom CSS:', 'widgets');
+	echo '</label>
+	<textarea style="width:100%;height:150px;" name="template_help-css">'.wp_specialchars($options['css'], true).'</textarea>
 
 	<fieldset style="border:1px solid #ccc;padding:3px;margin:5px 0" >
     <legend style="color:#777;">View All Templates Button:</legend>
@@ -285,6 +333,14 @@ function widget_template_help_init() {
 			$newoptions['sell'] = isset($_POST['sell_tm']) ? 'tm' : strip_tags(stripslashes($_POST['sell']));
 			/*title*/
 			$newoptions['title'] = strip_tags(stripslashes($_POST['template_help-title']));
+			/*css*/
+			$newoptions['css'] = strip_tags(stripslashes($_POST['template_help-css']));
+			/*randomize*/
+			$newoptions['randomize'] = intval($_POST['template_help-randomize']);
+			/*randomize_depth*/
+			$newoptions['randomize_depth'] = (int) $_POST['template_help-randomize_depth'];
+			if(($newoptions['randomize_depth']<1)||($newoptions['randomize_depth']>300))
+				$newoptions['randomize_depth']=10;
 			/*aff*/
 			$newoptions['aff'] = strip_tags(stripslashes($_POST['template_help-aff']));
 			/*wap*/
@@ -331,14 +387,14 @@ function widget_template_help_init() {
 		<script type="text/javascript" src="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/js/preview_templates.js"></script>
 		<script type="text/javascript">
 		jQuery(function() {
-				jQuery('.view-all-button').live('click',function(){
+				jQuery('._th_ft_view_all_button').live('click',function(){
 					jQuery.post("<?php echo get_option('home')?>/wp-admin/admin-ajax.php",
 						{action: "ga_click", event: "Click-view-all-templates"}
 					);
 				});
-				jQuery('.ft_image a.preview_image_link, .ft_image a.view').live('click',function(){
+				jQuery('._th_ft_details, ._th_ft_image_link').live('click',function(){
 					var $obj = jQuery(this).parent();
-					if (!$obj.hasClass('ft_image'))
+					if (!$obj.hasClass('_th_ft_item'))
 						$obj = $obj.parent();
 					jQuery.post("<?php echo get_option('home')?>/wp-admin/admin-ajax.php",
 						{action: "ga_click", event: "Click-view-template", item: $obj.attr('t_id'), title: "<?php echo $post->post_title;?>"}
@@ -347,8 +403,6 @@ function widget_template_help_init() {
 		});
 		</script>
 		<div style="display: none; position: absolute;z-index:110;" id="preview_div"> </div>
-		<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/style.css" />
-		<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/preview.css" />
 		<?
 	}
 
@@ -375,14 +429,14 @@ function widget_template_help_init() {
 			}
 		}
 		$keywords = isset($options['keywords']) ? $options['keywords'] : '';
-		$result = '<div class="featured_templates clear2"><h4>' . $options['title'] .'</h4><div id="templates_'.$th_ft_widget_scripts.'" class="templates clear2">';
+		$result = '<div class="_th_ft_block clear2"><h4 class="_th_ft_title">' . $options['title'] .'</h4><div id="templates_'.$th_ft_widget_scripts.'" class="_th_ft_templates clear2">';
 			for ($i=1; $i<=$options['count']; $i++) {
-				$result .= '<div class="ft_image">
-					<a class="preview_image_link" onmouseout="hidetrail()" target="_blank" href="http://store.templatemonster.com/?aff='.trim($options['aff']).'">
-						<img src="'.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/img/ajax-loader.gif" alt="template #"/>
+				$result .= '<div class="_th_ft_item">
+					<a class="_th_ft_image_link" onmouseout="hidetrail()" target="_blank" href="http://store.templatemonster.com/?aff='.trim($options['aff']).'">
+						<img class="_th_ft_image" src="'.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/img/ajax-loader.gif" alt="template #"/>
 					</a>
-					<div class="bottext">
-						<a target="_blank" class="view" href="#">View Template</a>
+					<div class="_th_ft_bottext">
+						<a target="_blank" class="_th_ft_details" href="#">View Template</a>
 					</div>
 				</div>';
 			}
@@ -390,23 +444,24 @@ function widget_template_help_init() {
 			<div class="clear2"></div>
 		</div>';
 		if($options['vaturl'] != '') {
-      $result .= '<div class="view-all-button">'
+      $result .= '<div class="_th_ft_view_all_button">'
           .'<a target="'.$options['vattarget'].'"href="'.$options['vaturl'].'" title="'.$options['vattitle'].'" id="view_all_templates" class="button_lbg"><span class="button_rbg"><span class="button_bg">'.$options['vattitle'].'</span></span></a>'
           .'</div>';
     }
+    $result .='<div class="clear2"></div>';
     if (!$th_ft_widget_scripts)
 			$result .= th_ft_widget_scripts();
 
 $sell= isset($options['sell']) ? trim($options['sell']) : 'tm';
-$bottext = $options['fullview'] ? '$obj.find(".bottext").html("<a href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price : $"+data.templates[i].price+"</a> | <a href=\'"+data.templates[i].href+"\' target=\_blank\'>Details</a><br/>Downloads : "+data.templates[i].downloads);' : '$obj.find(".bottext a").attr("href",data.templates[i].href);';
-$fullview = $options['fullview'] ? 'jQuery("#templates_'.$th_ft_widget_scripts.' .bottext .view").remove();' : '';
+$bottext = $options['fullview'] ? '$obj.find("._th_ft_bottext").html("<div class=\'_th_ft_type\'>"+data.templates[i].type+"</div><div class=\'_th_ft_info\'><a class=\'_th_ft_price\' href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price: $"+data.templates[i].price+"</a> | <a class=\'_th_ft_details\' href=\'"+data.templates[i].href+"\' target=\'_blank\'>View Now!</a></div><div class=\'_th_ft_downloads\'>Downloads: "+data.templates[i].downloads+"</div>");' : '$obj.find("._th_ft_bottext a").attr("href",data.templates[i].href);';
+$fullview = $options['fullview'] ? 'jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_bottext ._th_ft_details").remove();' : '';
 $widget = $echo ? 'sidebar' : 'post';
 $result .= '<script type="text/javascript">
 			jQuery(function() {
 				jQuery.getJSON("'.get_option('home').'/wp-admin/admin-ajax.php",
 				{action:"get_url", request_url:"http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'",
 				count:'.$options['count'].', type:'.intval($options['type']).', cat:'.intval($options['cat']).',
-				title:"'.$post->post_title.'", excerpt:"'.$post->post_excerpt.'",
+				title:"'.$post->post_title.'", excerpt:"'.base64_encode($post->post_excerpt).'",
 				widget:"'.$widget.'",
 				keywords:"'.$keywords.'",
 				cats:"'.implode(',',$cats).'",
@@ -416,7 +471,7 @@ $result .= '<script type="text/javascript">
 				function(data){
 					if (typeof(data.error) != "undefined" && !data.error) {
 						var imgs = new Array();
-						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' .ft_image"), function(i, item) {
+						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_item"), function(i, item) {
 							if (data.templates[i]) {
 								var $obj = jQuery(this);
 								$obj.attr("t_id", data.templates[i].tid);
@@ -431,7 +486,7 @@ $result .= '<script type="text/javascript">
 											});
 			  						}).attr("href", data.templates[i].href);
 			  						'.$bottext.'
-									}
+			  					}
 									else {
 									$obj.remove();
 									}
@@ -441,12 +496,12 @@ $result .= '<script type="text/javascript">
 							}
 						});
 						'.$fullview.'
-						jQuery("#templates_'.$th_ft_widget_scripts.' .bottext").fadeIn();
+						jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_bottext").fadeIn();
 					} else {
-						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' .ft_image"), function(i, item) {
+						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_item"), function(i, item) {
 							jQuery(this).find("a").css({width:"145px", height:"156px", background:"url('.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/img/preload-template.jpg)", border: "0px"}).attr("href","http://store.templatemonster.com/?aff='.trim($options['aff']).'").html("");
 						});
-						jQuery("#templates_'.$th_ft_widget_scripts.' .ft_image").css({height:"170px"});
+						//jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_item").css({height:"170px"});
 					}
 				});
 			});
@@ -491,10 +546,13 @@ function ga_click() {
 
 function get_url() {
 	header('Cache-control: no-cache');
+	$types = get_types_list();
 	$wpinc_update = intval($_REQUEST['wpinc_update']);
 	$sell = trim($_REQUEST['sell']);
 	$widget = trim($_REQUEST['widget']);
 	$options = ($widget == 'sidebar') ? (array) get_option('widget_template_help') : (array) get_option('widget_template_help_post');
+	$randomize = isset($options['randomize']) && $options['randomize'];
+	$randomize_depth = $randomize ? (isset($options['randomize_depth']) ? $options['randomize_depth'] : 10) : 0;
 	$type = intval($_REQUEST['type']);
 	$cat = intval($_REQUEST['cat']);
 	$tags = trim($_REQUEST['tags']);
@@ -535,7 +593,8 @@ function get_url() {
 										'pr_code'=>$pr_code,
 										'request_url'=>$_REQUEST['request_url'],
 										'wpinc_update'=>$wpinc_update,
-										'widget_version'=>TH_WIDGET_VERSION);
+										'widget_version'=>TH_WIDGET_VERSION,
+										'randomize_depth'=>$randomize_depth);
 	if ($wpinc_update) {
 		$data_url = array_merge($data_url, array('tags'=>$tags,
 										'cats'=>$cats,
@@ -568,6 +627,7 @@ function get_url() {
 						$templates[$i]['src'] = get_option('home')."/wp-content/plugins/".plugin_basename(dirname(__FILE__))."/img/preload-template.jpg";
 					$templates[$i]['cart'] = $template[4];
 					$templates[$i]['big'] = array('src'=>$template[5], 'width'=>$template[6], 'height'=>$template[7]);
+					$templates[$i]['type'] = isset($types[$template[8]]) ? $types[$template[8]] : '';
 					if ($pr_code) {
 						$templates[$i]['tid'] = $template[1];
 						$templates[$i]['href'] = 'http://www.templatehelp.com/preset/pr_preview.php?i='.$templates[$i]['tid'].'&pr_code='.$pr_code;
