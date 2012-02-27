@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.2
+Version: 3.2.1
 Author URI: http://www.mytemplatestorage.com
 */
 include_once('ssga.class.php');
@@ -13,7 +13,7 @@ add_action('wp_ajax_ga_click', 'ga_click');
 define('GA_ID', 'UA-1578076-8');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '3.2');
+define('TH_WIDGET_VERSION', '3.2.1');
 add_action('admin_menu', 'th_ft_init');
 add_action('activate_template-help-featured-templates/template-help_wordpress.php', 'th_alter_table');
 add_filter('plugin_action_links', 'add_settings_link', 10, 2 );
@@ -454,7 +454,6 @@ function widget_template_help_init() {
 
 $sell= isset($options['sell']) ? trim($options['sell']) : 'tm';
 $bottext = $options['fullview'] ? '$obj.find("._th_ft_bottext").html("<div class=\'_th_ft_type\'>"+data.templates[i].type+"</div><div class=\'_th_ft_info\'><a class=\'_th_ft_price\' href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price: $"+data.templates[i].price+"</a> | <a class=\'_th_ft_details\' href=\'"+data.templates[i].href+"\' target=\'_blank\'>View Now!</a></div><div class=\'_th_ft_downloads\'>Downloads: "+data.templates[i].downloads+"</div>");' : '$obj.find("._th_ft_bottext a").attr("href",data.templates[i].href);';
-$fullview = $options['fullview'] ? 'jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_bottext ._th_ft_details").remove();' : '';
 $widget = $echo ? 'sidebar' : 'post';
 $result .= '<script type="text/javascript">
 			jQuery(function() {
@@ -495,13 +494,11 @@ $result .= '<script type="text/javascript">
 								jQuery(this).remove();
 							}
 						});
-						'.$fullview.'
 						jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_bottext").fadeIn();
 					} else {
 						jQuery.each(jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_item"), function(i, item) {
 							jQuery(this).find("a").css({width:"145px", height:"156px", background:"url('.get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/img/preload-template.jpg)", border: "0px"}).attr("href","http://store.templatemonster.com/?aff='.trim($options['aff']).'").html("");
 						});
-						//jQuery("#templates_'.$th_ft_widget_scripts.' ._th_ft_item").css({height:"170px"});
 					}
 				});
 			});
