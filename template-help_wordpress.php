@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.3
+Version: 3.2.1
 Author URI: http://www.mytemplatestorage.com
 */
 include_once('ssga.class.php');
@@ -13,7 +13,7 @@ add_action('wp_ajax_ga_click', 'ga_click');
 define('GA_ID', 'UA-1578076-8');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '3.3');
+define('TH_WIDGET_VERSION', '3.2.1');
 add_action('admin_menu', 'th_ft_init');
 add_action('activate_template-help-featured-templates/template-help_wordpress.php', 'th_alter_table');
 add_filter('plugin_action_links', 'add_settings_link', 10, 2 );
@@ -79,8 +79,6 @@ function th_featured_templates() {
 		$newoptions['randomize_depth'] = (int) $_POST['template_help-randomize_depth'];
 		if(($newoptions['randomize_depth']<1)||($newoptions['randomize_depth']>300))
 			$newoptions['randomize_depth']=10;
-		/*rel*/
-		$newoptions['rel'] = intval(isset($_POST['template_help-rel']));
 		/*aff*/
 		$newoptions['aff'] = strip_tags(stripslashes($_POST['template_help-aff']));
 		/*wap*/
@@ -177,6 +175,7 @@ function show_th_ft_form($options, $align='right') {
 	_e('WebAPI Password:', 'widgets');
 	echo '<input style="width:99%;" type="text" id="template_help-wap" name="template_help-wap" value="'.wp_specialchars($options['wap'], true).'" />
 	</label><br/>';
+
 	echo '<div style="text-align:'.$align.';">
 	<label for="sell_tm" style="text-align:'.$align.';width:190px;"><input type="checkbox" id="sell_tm" name="sell_tm">&nbsp;';
 	_e('I want to sell through TemplateMonster.com', 'widgets');
@@ -211,15 +210,10 @@ function show_th_ft_form($options, $align='right') {
 	<input type="radio"	name="template_help-fullview" value="1"'.($fullview == 1 ? " checked" : "").'/> Full Details
 	<input type="radio"	name="template_help-fullview" value="0"'.($fullview == 0 ? " checked" : "").'/> Shorten Preview
 	</label>
-	<label for="template_help-rel" style="line-height:35px;display:block;">';
-	_e('Show relevant templates:', 'widgets');
-	$ckeck_rel = wp_specialchars($options['rel'], 0) ? ' checked' : '';
-	echo ' <input type="checkbox" id="template_help-rel" name="template_help-rel"'.$ckeck_rel.' value="1">
-	</label>
 
 	<label for="template_help-randomize" style="line-height:35px;display:block;">';
 	_e('Randomize: ', 'widgets');
-	$randomize = wp_specialchars($options['randomize'], 1);
+	$randomize = wp_specialchars($options['randomize'], true);
 	echo '<br/>
 	<input type="radio"	name="template_help-randomize" value="1"'.($randomize == 1 ? " checked" : "").'/> Yes
 	<input type="radio"	name="template_help-randomize" value="0"'.($randomize == 0 ? " checked" : "").'/> No
@@ -234,7 +228,7 @@ function show_th_ft_form($options, $align='right') {
 	echo '<input type="text" id="template_help-randomize_depth" name="template_help-randomize_depth" value="'.$randomize_depth.'" style="width:32px" />
 	</label>
 
-<div class="no_rel">
+
 	<label for="template_help-cats" style="line-height:35px;display:block;">';
 	_e('Categories:', 'widgets');
 	echo '</label>
@@ -262,7 +256,7 @@ function show_th_ft_form($options, $align='right') {
 	_e('Keywords:', 'widgets');
 	echo '</label>
 	<textarea style="width:100%" name="template_help-keywords">'.wp_specialchars($options['keywords'], true).'</textarea>
-</div>
+
 	<label for="template_help-css" style="line-height:35px;display:block;">';
 	_e('Custom CSS:', 'widgets');
 	echo '</label>
@@ -298,14 +292,6 @@ function show_th_ft_form($options, $align='right') {
 			jQuery('.widget-inside #template_help-shop_url').removeAttr('disabled');
 		}
 	}
-
-	function pars_check() {
-		if (jQuery('input[name=template_help-rel]').is(':checked')) {
-			jQuery('.no_rel').css('display', 'none');
-		} else {
-			jQuery('.no_rel').css('display', 'block');
-		}
-	}
 	jQuery(function(){
 		<?php
 		$sell = wp_specialchars($options['sell'], true);
@@ -319,7 +305,6 @@ function show_th_ft_form($options, $align='right') {
 		jQuery('.widget-inside #sell_rms').attr('checked',1);
 		<?php } ?>
 		aff_tool_check();
-		pars_check();
 		<?php if ($sell == 'tm') { ?>
 		jQuery('.widget-inside #sell_tm').attr('checked',1);
 		jQuery('.widget-inside #my_tools').css('display','none');
@@ -330,9 +315,6 @@ function show_th_ft_form($options, $align='right') {
 		});
 		jQuery('.widget-inside .sell').change(function(){
 			aff_tool_check();
-		});
-		jQuery('input[name=template_help-rel]').change(function(){
-			pars_check();
 		});
 	});
 	</script><?
@@ -359,8 +341,6 @@ function widget_template_help_init() {
 			$newoptions['randomize_depth'] = (int) $_POST['template_help-randomize_depth'];
 			if(($newoptions['randomize_depth']<1)||($newoptions['randomize_depth']>300))
 				$newoptions['randomize_depth']=10;
-			/*rel*/
-			$newoptions['rel'] = intval(isset($_POST['template_help-rel']));
 			/*aff*/
 			$newoptions['aff'] = strip_tags(stripslashes($_POST['template_help-aff']));
 			/*wap*/
@@ -473,7 +453,6 @@ function widget_template_help_init() {
 			$result .= th_ft_widget_scripts();
 
 $sell= isset($options['sell']) ? trim($options['sell']) : 'tm';
-$rel= (int)isset($options['rel']) && $options['rel'];
 $bottext = $options['fullview'] ? '$obj.find("._th_ft_bottext").html("<div class=\'_th_ft_type\'>"+data.templates[i].type+"</div><div class=\'_th_ft_info\'><a class=\'_th_ft_price\' href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price: $"+data.templates[i].price+"</a> | <a class=\'_th_ft_details\' href=\'"+data.templates[i].href+"\' target=\'_blank\'>View Now!</a></div><div class=\'_th_ft_downloads\'>Downloads: "+data.templates[i].downloads+"</div>");' : '$obj.find("._th_ft_bottext a").attr("href",data.templates[i].href);';
 $widget = $echo ? 'sidebar' : 'post';
 $result .= '<script type="text/javascript">
@@ -484,7 +463,6 @@ $result .= '<script type="text/javascript">
 				title:"'.$post->post_title.'", excerpt:"'.base64_encode($post->post_excerpt).'",
 				widget:"'.$widget.'",
 				keywords:"'.$keywords.'",
-				rel:"'.$rel.'",
 				cats:"'.implode(',',$cats).'",
 				tags:"'.implode(',',$tags).'",
 				wpinc_update:'.$wpinc_update.',
@@ -574,7 +552,6 @@ function get_url() {
 	$randomize_depth = $randomize ? (isset($options['randomize_depth']) ? $options['randomize_depth'] : 10) : 0;
 	$type = intval($_REQUEST['type']);
 	$cat = intval($_REQUEST['cat']);
-	$rel = intval($_REQUEST['rel']);
 	$tags = trim($_REQUEST['tags']);
 	$cats = trim($_REQUEST['cats']);
 	$keywords = trim($_REQUEST['keywords']);
@@ -609,7 +586,6 @@ function get_url() {
 										'webapipassword'=>$wap,
 										'type'=>$type,
 										'cat'=>$cat,
-										'rel'=>$rel,
 										'count'=>$count,
 										'pr_code'=>$pr_code,
 										'request_url'=>$_REQUEST['request_url'],
