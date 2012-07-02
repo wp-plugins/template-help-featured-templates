@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.3.2
+Version: 3.3.3
 Author URI: http://www.mytemplatestorage.com
 */
 include_once('ssga.class.php');
@@ -13,7 +13,7 @@ add_action('wp_ajax_ga_click', 'ga_click');
 define('GA_ID', 'UA-1578076-8');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '3.3.2');
+define('TH_WIDGET_VERSION', '3.3.3');
 add_action('admin_menu', 'th_ft_init');
 add_action('activate_template-help-featured-templates/template-help_wordpress.php', 'th_alter_table');
 add_filter('plugin_action_links', 'add_settings_link', 10, 2 );
@@ -26,6 +26,15 @@ function _th_ft_css() {
 	?>
 	<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/style.css" />
 	<link rel="stylesheet" type="text/css" href="<?php echo get_option('home')?>/wp-content/plugins/<?php echo plugin_basename(dirname(__FILE__))?>/css/preview.css" />
+	<script type="text/javascript">
+	function html_entity_decode(str) {
+	  var ta = document.createElement("textarea");
+	  ta.innerHTML=str.replace(/</g,"&lt;").replace(/>/g,"&gt;");
+	  toReturn = ta.value;
+	  ta = null;
+	  return toReturn
+	}
+	</script>
 	<?php
 	$options = get_option('widget_template_help');
 	$options['css'] = str_replace('._th_ft_', '.widget-area ._th_ft_',$options['css']);
@@ -466,7 +475,7 @@ function widget_template_help_init() {
 		</div>';
 		if($options['vaturl'] != '') {
       $result .= '<div class="_th_ft_view_all_button">'
-          .'<a target="'.$options['vattarget'].'"href="'.$options['vaturl'].'" title="'.$options['vattitle'].'" id="view_all_templates" class="button_lbg"><span class="button_rbg"><span class="button_bg">'.$options['vattitle'].'</span></span></a>'
+          .'<a target="'.$options['vattarget'].'" href="'.$options['vaturl'].'" title="'.$options['vattitle'].'" id="view_all_templates" class="button_lbg"><span class="button_rbg"><span class="button_bg">'.$options['vattitle'].'</span></span></a>'
           .'</div>';
     }
     $result .='<div class="clear2"></div>';
@@ -475,7 +484,7 @@ function widget_template_help_init() {
 
 $sell= isset($options['sell']) ? trim($options['sell']) : 'tm';
 $rel= (int)isset($options['rel']) && $options['rel'];
-$bottext = $options['fullview'] ? '$obj.find("._th_ft_bottext").html("<div class=\'_th_ft_type\'>"+data.templates[i].type+"</div><div class=\'_th_ft_info\'><a class=\'_th_ft_price\' href=\'"+data.templates[i].cart+"\' target=\'_blank\'>Price: $"+data.templates[i].price+"</a> | <a class=\'_th_ft_details\' href=\'"+data.templates[i].href+"\' target=\'_blank\'>View Now!</a></div><div class=\'_th_ft_downloads\'>Downloads: "+data.templates[i].downloads+"</div>");' : '$obj.find("._th_ft_bottext a").attr("href",data.templates[i].href);';
+$bottext = $options['fullview'] ? '$obj.find("._th_ft_bottext").html(html_entity_decode("&lt;div class=\'_th_ft_type\'&gt;"+data.templates[i].type+"&lt;/div&gt;&lt;div class=\'_th_ft_info\'&gt;&lt;a class=\'_th_ft_price\' href=\'"+data.templates[i].cart+"\' target=\'_blank\'&gt;Price: $"+data.templates[i].price+"&lt;/a&gt; | &lt;a class=\'_th_ft_details\' href=\'"+data.templates[i].href+"\' target=\'_blank\'&gt;View Now!&lt;/a&gt;&lt;/div&gt;&lt;div class=\'_th_ft_downloads\'&gt;Downloads: "+data.templates[i].downloads+"&lt;/div&gt;"));' : '$obj.find("._th_ft_bottext a").attr("href",data.templates[i].href);';
 $widget = $echo ? 'sidebar' : 'post';
 $ajax_loader = get_option('home').'/wp-content/plugins/'.plugin_basename(dirname(__FILE__)).'/img/ajax-loader.gif';
 $request_url = isset($post->ID) && $post->ID ? get_option('home').'/?p='.$post->ID : 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
