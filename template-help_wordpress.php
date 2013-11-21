@@ -125,10 +125,10 @@ function th_featured_templates() {
 	<div align="center" class="widget-inside" style="display:block !important" >
 	  <h2>TH Featured Templates Options</h2>
     <form name="th_ft_form" method="post" style="width:400px;">
-		<? show_th_ft_form($options, 'left');?>
+		<?php show_th_ft_form($options, 'left');?>
 		<input type="submit" value="Update" />
 		</form>
-	</div><?
+	</div><?php
 }
 
 function th_ft( $atts, $content = null ) {
@@ -344,7 +344,7 @@ function show_th_ft_form($options, $align='right') {
 			pars_check();
 		});
 	});
-	</script><?
+	</script><?php
 }
 // This gets called at the plugins_loaded action
 function widget_template_help_init() {
@@ -432,7 +432,7 @@ function widget_template_help_init() {
 		});
 		</script>
 		<div style="display: none; position: absolute;z-index:110;" id="preview_div"> </div>
-		<?
+		<?php
 	}
 
 	function show_th_ft_widget($options, $echo=true) {
