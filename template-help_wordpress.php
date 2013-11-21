@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.3.3
+Version: 3.3.4
 Author URI: http://www.mytemplatestorage.com
 */
 include_once('ssga.class.php');
