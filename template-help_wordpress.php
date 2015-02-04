@@ -3,7 +3,7 @@
 Plugin Name: TemplateHelp Featured Templates
 Description: Displays Featured Templates from TemplateHelp.com collection via AJAX
 Author: TemplateHelp.com
-Version: 3.3.4
+Version: 3.3.5
 Author URI: http://www.mytemplatestorage.com
 */
 include_once('ssga.class.php');
@@ -13,7 +13,7 @@ add_action('wp_ajax_ga_click', 'ga_click');
 define('GA_ID', 'UA-1578076-8');
 define('DEFAULT_AFF', 'wpincome');
 define('DEFAULT_PASS', 'd98c52ec04d5ce98f6f000a6d2b65160');
-define('TH_WIDGET_VERSION', '3.3.4');
+define('TH_WIDGET_VERSION', '3.3.5');
 add_action('admin_menu', 'th_ft_init');
 add_action('activate_template-help-featured-templates/template-help_wordpress.php', 'th_alter_table');
 add_filter('plugin_action_links', 'add_settings_link', 10, 2 );
@@ -431,7 +431,6 @@ function widget_template_help_init() {
 				});
 		});
 		</script>
-		<div style="display: none; position: absolute;z-index:110;" id="preview_div"> </div>
 		<?php
 	}
 

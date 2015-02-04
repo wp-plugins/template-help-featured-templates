@@ -4,6 +4,13 @@ Visit http://www.javascriptkit.com for this script and more
 This notice must stay intact
 */
 
+var previewElTemplate = document.createElement("div");
+previewElTemplate.id = 'preview_div';
+previewElTemplate.style.display = "none";
+previewElTemplate.style.position = "absolute";
+previewElTemplate.style.zIndex = "110";
+document.body.appendChild(previewElTemplate);
+
 var offsetfrommouse=[15,25]; //image x,y offsets from cursor position in pixels. Enter 0,0 for no offset
 var displayduration=0; //duration in seconds image should remain visible. 0 for always.
 
